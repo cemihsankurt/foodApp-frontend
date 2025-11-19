@@ -5,7 +5,11 @@ const API_URL = 'https://coadunate-chin-stannic.ngrok-free.dev/api'; // (v1 kull
 
 // 2. 'axios' için yeni bir "instance" (örnek) oluşturalım
 const apiClient = axios.create({
-    baseURL: API_URL
+    baseURL: API_URL,
+    headers: {
+        "ngrok-skip-browser-warning": "true",
+        "Content-Type": "application/json" 
+    }
 });
 
 // 3. İŞTE SİHİRLİ INTERCEPTOR (Kesici)
