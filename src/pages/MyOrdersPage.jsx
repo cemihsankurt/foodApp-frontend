@@ -164,7 +164,7 @@ function MyOrdersPage() {
                     ) : (
                         <button 
                             // 🚀 Butona tıklandığında izin isteği ve token kaydı tetiklenir
-                            onClick={Notification.permission}
+                            onClick={subscribeUserToPush}
                             style={{ padding: '8px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                         >
                             Yeni Sipariş Bildirimlerini Aç 🔔

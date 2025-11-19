@@ -156,8 +156,8 @@ function RestaurantPanelPage() {
                 {/* Başlık ve Durum (Aynı) */}
                 <div className="flex justify-between items-center mb-8">
                     <h2 className="text-3xl font-bold text-gray-800">{panelData.restaurantName} <span className="text-sm font-normal text-gray-500">| Yönetim Paneli</span></h2>
-                    <div className={`px-4 py-2 rounded-full font-bold text-sm ${panelData.isAvailable ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                        {panelData.isAvailable ? "● AÇIK" : "○ KAPALI"}
+                    <div className={`px-4 py-2 rounded-full font-bold text-sm ${panelData.available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        {panelData.available ? "● AÇIK" : "○ KAPALI"}
                     </div>
                 </div>
 
