@@ -8,7 +8,12 @@ function MyOrdersPage() {
     
     // --- 1. STATE TANIMLARI ---
     const [orders, setOrders] = useState([]);
-    const [notificationStatus, setNotificationStatus] = useState(Notification.permission);
+    const [notificationStatus, setNotificationStatus] = useState(() => {
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+            return Notification.permission;
+        }
+        return 'unsupported'; // Desteklenmiyor
+    });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -26,8 +31,15 @@ function MyOrdersPage() {
     }
 
     const subscribeUserToPush = useCallback(async () => {
-        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            console.warn("Push bildirimleri bu tarayıcıda desteklenmiyor.");
+
+        if (Notification.permission === 'denied') {
+            alert("⚠️ Bildirimler daha önce engellenmiş!\n\nLütfen telefonunuzun 'Ayarlar' kısmından bu uygulama için bildirimleri manuel olarak açın.");
+            return;
+        }
+        
+        if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+            alert("Maalesef bu cihaz/tarayıcı bildirimleri desteklemiyor (iOS ise Ana Ekrana Ekle yapmalısınız).");
+            setNotificationStatus('unsupported');
             return;
         }
 
@@ -46,6 +58,7 @@ function MyOrdersPage() {
 
             // 2. Service Worker'ın hazır olmasını bekle
             const registration = await navigator.serviceWorker.ready;
+            
 
             // 3. Abone ol (VAPID key ile)
             const subscription = await registration.pushManager.subscribe({
@@ -65,7 +78,8 @@ function MyOrdersPage() {
             // Backend'de oluşturduğun yeni endpoint'i çağır
             // (Örn: CustomerService'teki addPushSubscription metodunu çağıran Controller)
             await apiClient.post('/customer/subscribe', subscriptionData);
-            
+
+
             console.log("Web Push aboneliği başarıyla backend'e kaydedildi.");
 
         } catch (error) {
@@ -85,7 +99,15 @@ function MyOrdersPage() {
             setOrders(response.data);
         } catch (err) {
             console.error("Siparişler çekilirken hata:", err);
-            setError(err.message);
+
+            const debugError = {
+                message: err.message, // Hata mesajı
+                url: err.config?.url, // Hangi adrese istek attı? (En önemlisi bu!)
+                baseURL: err.config?.baseURL, // Ana adres neydi?
+                status: err.response?.status, // 404 mü, 500 mü, 403 mü?
+                backendCevabi: err.response?.data // Backend'in cevabı ne?
+            };
+            setError(JSON.stringify(debugError, null, 2));
         } finally {
             setLoading(false);
         }
@@ -127,6 +149,17 @@ function MyOrdersPage() {
     }, [fetchOrders]); // fetchOrders'ı bağımlılık olarak ekliyoruz
 
     useEffect(() => {
+        // Service Worker varsa dinle, yoksa (iPhone vb.) hata verme geç
+        if ('serviceWorker' in navigator) {
+            const handleMsg = (event) => {
+                if (event.data && event.data.type === 'push-update') fetchOrders();
+            };
+            navigator.serviceWorker.addEventListener('message', handleMsg);
+            return () => navigator.serviceWorker.removeEventListener('message', handleMsg);
+        }
+    }, [fetchOrders]);
+
+    useEffect(() => {
         // 1. Sayfa yüklendiğinde VAPID aboneliğini kontrol et/kaydet
         subscribeUserToPush();
         
@@ -151,51 +184,43 @@ function MyOrdersPage() {
     if (error) return <div style={{ color: 'red' }}>Hata: {error}</div>;
 
     return (
-        <div>
+        <div style={{padding:'10px'}}>
             <h2>Siparişlerim</h2>
             
-            {/* 🔔 BİLDİRİM İZİN BUTONU: Sadece izin verilmemişse göster */}
-            {notificationStatus !== 'granted' && (
-                <div style={{ padding: '10px', backgroundColor: '#fff3cd', border: '1px solid #ffeeba', borderRadius: '5px', marginBottom: '15px' }}>
-                    {notificationStatus === 'denied' ? (
-                        <p style={{ margin: 0, color: 'red' }}>
-                            Bildirimler tarayıcı ayarlarınızdan engellenmiş. Lütfen adres çubuğundan izin verin.
-                        </p>
-                    ) : (
-                        <button 
-                            // 🚀 Butona tıklandığında izin isteği ve token kaydı tetiklenir
-                            onClick={subscribeUserToPush}
-                            style={{ padding: '8px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                        >
-                            Yeni Sipariş Bildirimlerini Aç 🔔
-                        </button>
-                    )}
+            {/* 🔔 BİLDİRİM BUTONU (Sadece destekleniyorsa göster) */}
+            {notificationStatus !== 'unsupported' && notificationStatus !== 'granted' && (
+                <div style={{ padding: '10px', backgroundColor: '#e2e3e5', marginBottom: '15px', borderRadius:'5px' }}>
+                    <p style={{fontSize:'12px', margin:'0 0 5px 0'}}>Sipariş durumunu anlık öğrenmek için:</p>
+                    <button 
+                        onClick={subscribeUserToPush} 
+                        style={{ padding: '8px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px' }}
+                    >
+                        Bildirimleri Aç 🔔
+                    </button>
                 </div>
             )}
 
-            {/* Sipariş Listesi */}
+            {/* Desteklenmiyorsa uyarı (Opsiyonel) */}
+            {notificationStatus === 'unsupported' && (
+                <div style={{fontSize:'12px', color:'#888', marginBottom:'10px'}}>
+                    * Cihazınız web bildirimlerini desteklemiyor olabilir.
+                </div>
+            )}
+
             <div className="order-list">
                 {orders.length > 0 ? (
                     orders.map(order => (
-                        <div key={order.orderId} style={{ border: '1px solid black', margin: '10px', padding: '10px' }}>
-                            <h4>Restoran: {order.restaurantName}</h4>
-                            <p>Durum: <strong>{order.orderStatus}</strong></p>
-                            
-                            <Link to={`/orders/${order.orderId}`}>Detayları Gör</Link>
-                            
-                            {/* İptal Butonu */}
+                        <div key={order.orderId} style={{ border: '1px solid #ddd', margin: '10px 0', padding: '15px', borderRadius:'8px' }}>
+                            <h4>{order.restaurantName}</h4>
+                            <p>Durum: <b>{order.orderStatus}</b></p>
+                            <Link to={`/orders/${order.orderId}`} style={{color:'blue', marginRight:'10px'}}>Detay</Link>
                             {order.orderStatus === 'PENDING' && (
-                                <button 
-                                    onClick={() => handleCancelOrder(order.orderId)}
-                                    style={{ background: 'red', color: 'white', marginLeft: '10px' }}
-                                >
-                                    İptal Et
-                                </button>
+                                <button onClick={() => handleCancelOrder(order.orderId)} style={{background:'red', color:'white', border:'none', borderRadius:'4px'}}>İptal</button>
                             )}
                         </div>
                     ))
                 ) : (
-                    <p>Henüz hiç sipariş vermemişsiniz.</p>
+                    <p>Siparişiniz yok.</p>
                 )}
             </div>
         </div>

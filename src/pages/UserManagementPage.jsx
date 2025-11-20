@@ -87,8 +87,8 @@ function UserManagementPage() {
                                     
                                     {/* Durum: Banned mı, Verified mı? */}
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold">
-                                        <span className={`px-2 inline-flex text-xs leading-5 rounded-full ${u.isBanned ? 'bg-red-100 text-red-800' : (u.isVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800')}`}>
-                                            {u.isBanned ? "Banlı" : (u.isVerified ? "Aktif" : "Onaylı Hesap")}
+                                        <span className={`px-2 inline-flex text-xs leading-5 rounded-full ${u.banned ? 'bg-red-100 text-red-800' : (u.isVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800')}`}>
+                                            {u.banned ? "Banlı" : (u.verified ? "Aktif" : "Onaylı Hesap")}
                                         </span>
                                     </td>
 
@@ -98,9 +98,9 @@ function UserManagementPage() {
                                             <button 
                                                 onClick={() => handleToggleBan(u.id, u.isBanned)}
                                                 className={`py-1 px-3 rounded-lg text-white transition duration-150 
-                                                    ${u.isBanned ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'}`}
+                                                    ${u.banned ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'}`}
                                             >
-                                                {u.isBanned ? "Banı Aç" : "Banla"}
+                                                {u.banned ? "Banı Aç" : "Banla"}
                                             </button>
                                         ) : (
                                             <small className="text-gray-400">(Admin)</small>
