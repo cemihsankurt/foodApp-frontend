@@ -63,10 +63,6 @@ const router = createBrowserRouter([
         element: <RegisterCustomerPage />,
       },
       {
-        path: '/register-restaurant',
-        element: <RegisterRestaurantPage />,
-      },
-      {
         path: '/restaurants/:restaurantId',
         element: <RestaurantMenuPage />,
       },
@@ -141,7 +137,16 @@ const router = createBrowserRouter([
             <UserManagementPage />
           </AdminRoute>
         ),
-      }
+      },
+      {
+        path: '/register-restaurant',
+        element:(
+          <AdminRoute>
+            <RegisterRestaurantPage />
+          </AdminRoute>
+          
+        ), 
+      },
     ],
   },
 ]);

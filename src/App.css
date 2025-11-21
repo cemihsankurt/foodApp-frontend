@@ -1,0 +1,10 @@
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent; /* Tıklayınca çıkan mavi gölgeyi kaldırır */
+}
+
+input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}

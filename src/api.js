@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // 1. Backend'imizin ana adresini bir değişkene atayalım
-const API_URL = 'https://coadunate-chin-stannic.ngrok-free.dev/api'; // (v1 kullanmıyorduk sanırım)
+const API_URL = 'http://localhost:8080/api'; // (v1 kullanmıyorduk sanırım)
 
 // 2. 'axios' için yeni bir "instance" (örnek) oluşturalım
 const apiClient = axios.create({
